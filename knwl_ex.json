@@ -1,0 +1,10 @@
+[
+	{
+		"sets": ["disc", "cont"],
+		"rels": ["cont !anc disc", "cont uncf disc"],
+		"disc": ["CHAS"],
+		"cont": ["CRIM", "ZN", "INDUS", "NOX", 
+			"RM", "AGE", "DIS", "RAD", "TAX", 
+			"PTRATIO", "B", "LSTAT", "MEDV"]
+	}
+]
