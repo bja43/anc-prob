@@ -13,9 +13,11 @@ import numpy as np
 df = pd.read_csv("https://raw.githubusercontent.com/cmu-phil/example-causal-datasets/main/real/boston-housing/data/boston-housing.continuous.txt", sep="\t")
 df = df.astype({"RAD": "float64", "TAX": "float64"})
 print(df.head())
+print("instances:", len(df.index))
 
 # Create the model and AP object
-model = ap.LH(df)
+model = ap.MG(df)
+# model = ap.LH(df)
 anc_prob = ap.AP(model)
 
 # Load knowledge
@@ -45,7 +47,7 @@ anc_prob.compute(plt_dir=plt_dir)
 # Resample the procedure
 plt_dir = "./" + current + "/plots_resamp"
 os.mkdir(plt_dir)
-anc_prob.resample(reps=30, plt_dir=plt_dir)
+anc_prob.resample(reps=100, plt_dir=plt_dir)
 
 # Get the top 5 best PAGs
 gdot = gviz.Graph(format='png', engine='neato')
@@ -77,7 +79,7 @@ anc_prob.compute(plt_dir=plt_dir)
 # Resample the procedure
 plt_dir = "./" + current + "/plots_resamp"
 os.mkdir(plt_dir)
-anc_prob.resample(reps=30, plt_dir=plt_dir)
+anc_prob.resample(reps=100, plt_dir=plt_dir)
 
 # Get the top 5 best PAGs
 gdot = gviz.Graph(format='png', engine='neato')

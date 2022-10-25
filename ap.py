@@ -739,8 +739,8 @@ class AP:
 						     self.sel[j]+r'$\,\leftsquigarrow\,$'+self.sel[i], 
 						     self.sel[j]+r'$\leftrightarrow$'+self.sel[i], 
 						     self.sel[j]+r'$\,\dots\,$'+self.sel[i]],
-						    [ap['di'][i,j], ap['di'][j,i], 
-						     ap['bi'][i,j], ap['nr'][i,j]],
+						    [ap['an'][i,j], ap['an'][j,i], ap['bi'][i,j], 
+						     1 - ap['an'][i,j] - ap['an'][j,i] - ap['bi'][i,j]],
 						     color='gray')
 					plt.xticks(rotation=10)
 					plt.yticks(np.linspace(1,0,11))
@@ -760,10 +760,12 @@ class AP:
 
 		rslts = {}
 		anc = {}
+		to_plot = {}
 		for i in range(self.q):
 			for j in range(i):
 				rslts[(self.sel[j], self.sel[i])] = []
 				anc[(self.sel[j], self.sel[i])] = []
+				to_plot[(self.sel[j], self.sel[i])] = []
 
 		for rep in range(reps):
 			# if bootstrapping, include the original dataset
@@ -774,12 +776,14 @@ class AP:
 			for i in range(self.q):
 				for j in range(i):
 					rslts[(self.sel[j], self.sel[i])].append(
-						[ap['di'][i,j], ap['di'][j,i], 
+						[ap['di'][i,j], ap['di'][j,i],
 						 ap['bi'][i,j], ap['nr'][i,j]])
 					anc[(self.sel[j], self.sel[i])].append(
 						[ap['an'][i,j], 1-ap['an'][i,j],
 						 ap['an'][j,i], 1-ap['an'][j,i]])
-
+					to_plot[(self.sel[j], self.sel[i])].append(
+						[ap['an'][i,j], ap['an'][j,i], ap['bi'][i,j], 
+						 1 - ap['an'][i,j] - ap['an'][j,i] - ap['bi'][i,j]])
 
 		plt.rcParams['font.size'] = 14
 		plt.rcParams['font.family'] = 'serif'
@@ -796,7 +800,7 @@ class AP:
 				for j in range(i):
 					fig = plt.figure(figsize=(6,6), dpi=self.dpi)
 					fig.tight_layout()
-					plt.boxplot(np.array(rslts[(self.sel[j], self.sel[i])]), 
+					plt.boxplot(np.array(to_plot[(self.sel[j], self.sel[i])]), 
 						labels=[self.sel[j]+r'$\,\rightsquigarrow\,$'+self.sel[i], 
 						     	self.sel[j]+r'$\,\leftsquigarrow\,$'+self.sel[i], 
 						     	self.sel[j]+r'$\leftrightarrow$'+self.sel[i], 
