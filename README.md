@@ -31,6 +31,24 @@ We approximate the marginal likelihood of MAG models[^2] with a modified version
    * ap.LH(*data*)
       * *data* = pandas.DataFrame
 
+## Analysis
+
+   * ap.AP(*model*)
+      * *model* = ap.Model (ap.MG, ap.MN, or ap.LH)
+   * set_knowledge(*filename*)
+      * *filename* = path/filename (JSON knowledge file)
+   * set_selected(*selected*)
+      * *selected* = list (subset of variables to be analyzed)
+   * get_counts()
+   * get_best(*top=None*, *gdot=None*, *plt_dir=None*)
+      * (optional) *top* = int (number of graphs to return)
+      * (optional) *gdot* = graphviz.Graph (graphviz Graph object, if None no figures are produced)
+      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
+   * compute(*plt_dir=None*)
+      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
+   * resample(*reps*, *plt_dir=None*)
+      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
+
 ## Knowledge
 
 Knowledge is used to require or forbid various types of relationships between user defined groups of variables. Knowledge can be added to the analysis by JSON file. The JSON file should be constructed with to mandatory arrays:
@@ -65,24 +83,6 @@ The two mandatory arrays should be followed by an array for each user defined de
 In the example above, we have defined group names **"disc"** and **"cont"** which are intended to contain the discrete and continuous variables, respectively. After defining these group names, we specify two relationships that we wish to enforce in the analysis:
    * ***cont !anc disc*** forbids models where any variable in *cont* is an ancestor of a variable in *disc*;
    * ***cont uncf disc*** forbids models with dependence between one or more variables in *cont* and one or more variables in *disc* that can only be explained by latent confounding.
-
-## Analysis
-
-   * ap.AP(*model*)
-      * *model* = ap.Model (ap.MG, ap.MN, or ap.LH)
-   * set_knowledge(*filename*)
-      * *filename* = path/filename (JSON knowledge file)
-   * set_selected(*selected*)
-      * *selected* = list (subset of variables to be analyzed)
-   * get_counts()
-   * get_best(*top=None*, *gdot=None*, *plt_dir=None*)
-      * (optional) *top* = int (number of graphs to return)
-      * (optional) *gdot* = graphviz.Graph (graphviz Graph object, if None no figures are produced)
-      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
-   * compute(*plt_dir=None*)
-      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
-   * resample(*reps*, *plt_dir=None*)
-      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
 
 ## Usage
 
