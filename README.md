@@ -1,26 +1,32 @@
 # anc-prob: Ancestral Probability (AP)
-This repository contains code and examples for using the Ancestral Probability procedure[^1]. The AP procedure performed local causal discovery (3-5 variables) in a Bayesian manner while allowing for latent confounding.
+This repository contains code and an example for the Ancestral Probability (AP) procedure[^1]. The AP procedure performed local causal discovery (3-5 variables) in a Bayesian manner while allowing for latent confounding.
 
 ## Dependencies
 
+### Required
+   * numpy
+   * itertools
+   * pandas
+   * matplotlib
+   * pickle
+   * json
+   * os
 
+### Optional
+   * graphviz
 
 ## Models
 
-We approximate the marginal likelihood of the models using the BIC[^2][^3].
-
-1. Multivariate Gaussian:
-   * for continuous datasets
+We approximate the marginal likelihood of the models that allow for latent confounding[^2] using a modified version of the BIC[^3][^4][^5] score. This score requires a model from a curved exponential family. This repository contains the follow models:
+1. Multivariate Gaussian (continuous):
    * ap.MG(*data*)
-      * *data* = DataFrame
-2. Multinomial:
-   * for discrete datasets
+      * *data* = pandas.DataFrame
+2. Multinomial (discrete):
    * ap.MN(*data*)
-      * *data* = DataFrame
-3. Lee and Hastie[^4][^5]
-   * for mixed datasets
+      * *data* = pandas.DataFrame
+3. Lee and Hastie[^6][^7] (mixed):
    * ap.LH(*data*)
-      * *data* = DataFrame
+      * *data* = pandas.DataFrame
 
 ## Knowledge
 
@@ -33,7 +39,7 @@ Knowledge is used to require or forbid various types of relationships between us
       * ***A !adj B*** forbids any variable in *A* from being adjacent to any variable in *B*;
       * ***A anc B*** requires that all variables in *A* are ancestors of all variables in *B*;
       * ***A !anc B*** forbids any variable in *A* from being an ancestor of any variable in *B*;
-      * ***A uncf B*** forbids any varaible in *A* from being connected to any variable in *B* by a bi-directed edge[^6].
+      * ***A uncf B*** forbids any varaible in *A* from being connected to any variable in *B* by a bi-directed edge[^8].
 
 ### Example
 ```
@@ -55,19 +61,40 @@ In the example above, we have defined group names **"disc"** and **"cont"** whic
 
 ## Analysis
 
-ap.AP(model)
-   * set_knowledge(filename)
-   * set_selected(selected)
+   * ap.AP(*model*)
+      * *model* = ap.Model (ap.MG, ap.MN, or ap.LH)
+   * set_knowledge(*filename*)
+      * *filename* = path/filename (JSON knowledge file)
+   * set_selected(*selected*)
+      * *selected* = list (subset of variables to be analyzed)
    * get_counts()
-   * get_best(top, gdot, plt_dir)
-   * compute(plt_dir, rsmp, frac, n, rplc)
-   * resample(reps, plt_dir, frac, n, rplc)
+   * get_best(*top*, *gdot*, *plt_dir*)
+      * (optional) *top* = int (number of graphs to return)
+      * (optional) *gdot* = graphviz.Graph (graphviz Graph object, if None no figures are produced)
+      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
+   * compute(*plt_dir*, *rsmp*, *frac*, *n*, *rplc*)
+      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
+      * (optional) *rsmp* = bool (resample the data)
+      * (optional) *frac* = float (fraction of the dataset to resample, ignored if n != None)
+      * (optional) *n* = int (number of instances to resample)
+      * (optional) *rplc* = bool (resample with replacement)
+   * resample(*reps*, *plt_dir*, *frac*, *n*, *rplc*)
+      * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
+      * (optional) *frac* = float (fraction of the dataset to resample, ignored if n != None)
+      * (optional) *n* = int (number of instances to resample)
+      * (optional) *rplc* = bool (resample with replacement)
 
 ## Usage
 
-We start by choosing a dataset to analyze. Here we investigate a dataset concerning housing values in suburbs of Boston which we pull from a repository of datasets suitable for causal discovery analysis[^7][^8].
+We start by choosing a dataset to analyze. Here we investigate a dataset concerning housing values in suburbs of Boston which we pull from a repository of datasets suitable for causal discovery analysis[^9][^10].
 
 ```python
+import os
+import ap
+
+import pandas as pd
+import graphviz as gviz
+
 # Make/clean directory for example
 dir_ex = "figs_ex"
 os.system("rm -r -f " + dir_ex)
@@ -125,7 +152,7 @@ num mecs: 24259
 num mags: 328924
 ```
 
-Above, we see that there are currently 328,924 causal models that we are currently considering. We can narrow this set down to a more relevant set by incorporating knowledge.
+Above, we see that we are currently considering 328,924 causal models. We can narrow this set down to a more relevant set by incorporating knowledge.
 
 ```python
 # Load knowledge
@@ -142,7 +169,7 @@ num mecs: 9896
 num mags: 39872
 ```
 
-Now we are ready to analyze our data.
+Now we are ready to analyze our data. We start by visualizing the probable causal graphs, which are called partial ancestral graphs[^2] (PAGs).
 
 ```python
 # Get the top 6 PAGs
@@ -160,9 +187,10 @@ anc_prob.get_best(top=6, gdot=gdot, plt_dir=plt_dir)
 |:-:|:-:|:-:|
 |![Fourth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_4.png "pag_4.png")|![Fifth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_5.png "pag_5.png")|![Sixth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_6.png "pag_6.png")|
 
-Of interest are:
-   * CRIM
-   * CRIM
+Given the most probable graphs, it might be interesting to investigate the possible causes of **CRIM** (per capita crime rate by town). In particular, what are the probabilities that the follow variables causes **CRIM**:
+   * **AGE** (proportion of owner-occupied units built prior to 1940);
+   * **MEDV** (median value of owner-occupied homes in $1,000's);
+   * **TAX** (full-value property-tax rate per $10,000).
 
 ```python
 # Run the procedure
@@ -171,9 +199,9 @@ os.mkdir(plt_dir)
 anc_prob.compute(plt_dir=plt_dir)
 ```
 
-|AGE x CRIM|CRIM x MEDV|
-|:-:|:-:|
-|![AGE x CRIM](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/AGE_CRIM.png "AGE_CRIM.png")|![CRIM x MEDV](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/CRIM_MEDV.png "CRIM_MEDV.png")|
+|AGE x CRIM|CRIM x MEDV|CRIM x TAX|
+|:-:|:-:|:-:|
+|![AGE x CRIM](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/AGE_CRIM.png "AGE_CRIM.png")|![CRIM x MEDV](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/CRIM_MEDV.png "CRIM_MEDV.png")|![CRIM x TAX](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/CRIM_TAX.png "CRIM_TAX.png")|
 
 We can gain confidence in the robustivity of our results using resampling techniques.
 
@@ -184,17 +212,21 @@ os.mkdir(plt_dir)
 anc_prob.resample(reps=100, plt_dir=plt_dir)
 ```
 
-|AGE x CRIM|CRIM x MEDV|
-|:-:|:-:|
-|![AGE x CRIM](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/AGE_CRIM.png "AGE_CRIM.png")|![CRIM x MEDV](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/CRIM_MEDV.png "CRIM_MEDV.png")|
+|AGE x CRIM|CRIM x MEDV|CRIM x TAX|
+|:-:|:-:|:-:|
+|![AGE x CRIM](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/AGE_CRIM.png "AGE_CRIM.png")|![CRIM x MEDV](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/CRIM_MEDV.png "CRIM_MEDV.png")|![CRIM x TAX](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/CRIM_TAX.png "CRIM_TAX.png")|
+
+Accordingly, our impromptu analysis has bore fruit! According to the AP procedure, it is highly likely that **MEDV** causes **CRIM** and somewhat likely that **TAX** causes **CRIM**. 
 
 ---
 
 [^1]: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4240385
-[^2]: https://www.jstor.org/stable/2958889
-[^3]: https://www.jstor.org/stable/2241441
-[^4]: http://proceedings.mlr.press/v31/lee13a.pdf
-[^5]: http://proceedings.mlr.press/v104/andrews19a/andrews19a.pdf
-[^6]: This forbids models with dependence between one or more variables in *A* and one or more variables in *B* that can only be explained by latent confounding.
-[^7]: https://archive.ics.uci.edu/ml/machine-learning-databases/housing/
-[^8]: https://github.com/cmu-phil/example-causal-datasets/
+[^2]: https://projecteuclid.org/journals/annals-of-statistics/volume-30/issue-4/Ancestral-graph-Markov-models/10.1214/aos/1031689015.full
+[^3]: https://www.jstor.org/stable/2958889
+[^4]: https://www.jstor.org/stable/2241441
+[^5]: https://arxiv.org/pdf/2207.08963.pdf
+[^6]: http://proceedings.mlr.press/v31/lee13a.pdf
+[^7]: http://proceedings.mlr.press/v104/andrews19a/andrews19a.pdf
+[^8]: This forbids models with dependence between one or more variables in *A* and one or more variables in *B* that can only be explained by latent confounding.
+[^9]: https://archive.ics.uci.edu/ml/machine-learning-databases/housing/
+[^10]: https://github.com/cmu-phil/example-causal-datasets/
