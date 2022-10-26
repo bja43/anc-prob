@@ -1,9 +1,11 @@
 # anc-prob: Ancestral Probability (AP)
-This repository contains code and an example for the Ancestral Probability (AP) procedure[^1]. The AP procedure performs local causal discovery (3-5 variables) in a Bayesian manner while accounting for the possibility of latent confounding. This is done by calculating an approximation of the marginal likelihood for all MAG models[^2] with a modified version of the BIC score[^3][^4][^5] and marginalizing over features of interst, such as if one variables is an ancestor (cause) of another.
+
+This repository contains code and an example for the Ancestral Probability (AP) procedure[^1]. The AP procedure performs local causal discovery (3-5 variables) in a Bayesian manner while accounting for the possibility of latent confounding. This is done by first calculating an approximation of the marginal likelihood for all MAG models[^2] with a modified version of the BIC score[^3][^4][^5] and then marginalizing over features of interst, such as if one variables is an ancestor (cause) of another.
 
 ## Dependencies
 
 ### Required
+
    * numpy
    * itertools
    * pandas
@@ -13,6 +15,7 @@ This repository contains code and an example for the Ancestral Probability (AP) 
    * os
 
 ### Optional
+
    * graphviz
 
 ## Models
@@ -41,9 +44,11 @@ Knowledge is used to require or forbid various types of relationships between us
       * ***A anc B*** requires that all variables in *A* are ancestors of all variables in *B*;
       * ***A !anc B*** forbids any variable in *A* from being an ancestor of any variable in *B*;
       * ***A uncf B*** forbids any varaible in *A* from being connected to any variable in *B* by a bi-directed edge[^8].
-      
+
 The two mandatory arrays should be followed by an array for each user defined defined group name where each array containing the variables belonging to the corresponding user defined group.
+
 ### Example
+
 ```
 [
 	{
@@ -114,7 +119,7 @@ print("instances:", len(df.index))
 instances: 506
 ```
 
-Next, we choose a parameteric model class to fit to the data. Our dataset has 13 continuous variables and one binary variable, so we choose the Lee and Hastie model class because it can be applied to mixed datasets.
+Next, we choose a parameteric model to fit to the data. Our dataset contains 13 continuous variables and one binary variable, so we choose the Lee and Hastie model because it can be applied to mixed datasets.
 
 ```python
 # Create the model and AP object
@@ -164,7 +169,7 @@ num mecs: 9896
 num mags: 39872
 ```
 
-Now we are ready to analyze our data. We start by visualizing the probable causal graphs, which are called partial ancestral graphs[^2] (PAGs).
+Now we are ready to analyze our data. We start by visualizing the most probable Markov equivalence classes (MECs) of the MAG models, which are illustrated using PAGs[^2].
 
 ```python
 # Get the top 6 PAGs
@@ -182,14 +187,14 @@ anc_prob.get_best(top=6, gdot=gdot, plt_dir=plt_dir)
 |:-:|:-:|:-:|
 |![Fourth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_4.png "pag_4.png")|![Fifth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_5.png "pag_5.png")|![Sixth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_6.png "pag_6.png")|
 
-Given the most probable graphs, it might be interesting to investigate the possible causes of **CRIM** (per capita crime rate by town). In particular, what are the probabilities that the follow variables causes **CRIM**:
+Given the most probable MECs/PAGs, it might be interesting to investigate the possible causes of **CRIM** (per capita crime rate by town). In particular, what are the probabilities that the follow variables causes **CRIM**:
    * **AGE** (proportion of owner-occupied units built prior to 1940);
    * **MEDV** (median value of owner-occupied homes in $1,000's);
    * **TAX** (full-value property-tax rate per $10,000).
 
 ```python
 # Run the procedure
-plt_dir = "./" + current + "/plots_single"
+plt_dir = "./" + dir_ex + "/plots_single"
 os.mkdir(plt_dir)
 anc_prob.compute(plt_dir=plt_dir)
 ```
@@ -202,7 +207,7 @@ We can gain confidence in the robustivity of our results using resampling techni
 
 ```python
 # Resample the procedure
-plt_dir = "./" + current + "/plots_resamp"
+plt_dir = "./" + dir_ex + "/plots_resamp"
 os.mkdir(plt_dir)
 anc_prob.resample(reps=100, plt_dir=plt_dir)
 ```
@@ -211,7 +216,7 @@ anc_prob.resample(reps=100, plt_dir=plt_dir)
 |:-:|:-:|:-:|
 |![AGE x CRIM](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/AGE_CRIM.png "AGE_CRIM.png")|![CRIM x MEDV](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/CRIM_MEDV.png "CRIM_MEDV.png")|![CRIM x TAX](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_resamp/CRIM_TAX.png "CRIM_TAX.png")|
 
-Accordingly, our impromptu analysis has bore fruit! According to the AP procedure, it is highly likely that **MEDV** causes **CRIM** and somewhat likely that **TAX** causes **CRIM**. 
+Our impromptu analysis has bore fruit! According to the AP procedure, it is highly likely that **MEDV** causes **CRIM** and somewhat likely that **TAX** causes **CRIM**. 
 
 ---
 
