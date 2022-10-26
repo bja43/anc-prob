@@ -261,11 +261,6 @@ class Model:
 		return self.vbls
 
 
-	def get_missing(self):
-
-		return self.missing
-
-
 	def resample(self):
 
 		print('method not overridden')
@@ -380,7 +375,6 @@ class MN(Model):
 		cat_map = self.cat_map_rsmp if rsmp else self.cat_map
 
 		n = self.n_rsmp if rsmp else self.n
-		k = np.prod([len(cat_map[v]) for v in vbls]) - 1
 
 		cpt = np.zeros([len(cat_map[v]) for v in vbls])
 		for i in range(n):
@@ -388,10 +382,22 @@ class MN(Model):
 
 		log_prob = np.sum(cpt*np.log(cpt/n+(cpt==0)))
 
-		# parameter calculation is incorrect
+		# parameter calculation is postponed
 
-		return log_prob - k/2*np.log(n)
+		return log_prob
 
+
+	def info(self, vbls, rsmp=False):
+
+		p = len(vbls)
+
+		info = np.float64(0)
+		for i in range(1,p+1):
+			for s in it.combinations(vbls, i):
+				k = np.prod([len(cat_map[v]) - 1 for v in s])
+				info += (-1)**((p-i)%2) * self.log_prob(list(s), rsmp) - k/2*np.log(n)
+
+		return info
 
 
 class LH(Model):
@@ -667,6 +673,78 @@ class AP:
 				del self.mecs[key]
 
 
+	def get_best(self, top=None, gdot=None, plt_dir='./'):
+
+		if len(self.sel) == 0:
+			print('nothing selected')
+			quit()
+
+		infos = []
+		for idx in self.idx:
+			vbls = [self.sel[v] for v in idx]
+			infos.append(self.model.info(vbls, False))
+
+		scores = []
+		norm = np.dtype(dtype=self.dtype).type(-np.inf)
+
+		for key in self.mecs:
+
+			score = 0
+			score += np.sum([infos[s] for s in key])
+
+			# prior: uniform over MAGs (comment) or MECs (uncomment)
+			score -= len(self.mecs[key])
+
+			if not np.isnan(score) and score != 0:
+				scores.append((score, [mag for mag, anc in self.mecs[key]]))
+				norm = np.logaddexp(norm, score)
+
+		scores.sort(reverse=True)
+
+		probs = []
+		for score in scores:
+			probs.append((np.exp(score[0] - norm) * 100, score[1]))
+
+		if top != None:
+			probs = probs[:top]
+
+		if gdot != None:
+			count = 1
+
+			for prob, mec in probs:
+
+				pag = np.zeros([self.q, self.q])
+				for mag in mec:
+					pag += mag != 0
+				pag /= len(mec)
+
+				for i in range(self.q):
+					a = self.sel[i]
+					gdot.node(a, shape='circle', fixedsize='true',  style='filled', color='lightgray')
+					for j in range(0, i):
+						b = self.sel[j]
+						if pag[i,j] == 1 and pag[j,i] == 1:
+							gdot.edge(b,a,arrowhead='empty',arrowtail='empty',dir='both',color='darkgray')
+						elif pag[i,j] == 1 and pag[j,i] == 0:
+							gdot.edge(b,a,arrowhead='empty',arrowtail='none',dir='both',color='darkgray')
+						elif pag[j,i] == 1 and pag[i,j] == 0:
+							gdot.edge(a,b,arrowhead='empty',arrowtail='none',dir='both',color='darkgray')
+						elif pag[i,j] == 1:
+							gdot.edge(b,a,arrowhead='empty',arrowtail='odot',dir='both',color='darkgray')
+						elif pag[j,i] == 1:
+							gdot.edge(a,b,arrowhead='empty',arrowtail='odot',dir='both',color='darkgray')
+						elif pag[i,j] > 0  and pag[j,i] > 0:
+							gdot.edge(b,a,arrowhead='odot',arrowtail='odot',dir='both',color='darkgray')
+
+				gdot.attr(label='\nProbability: ' + str(prob), scale='2')
+				gdot.render(filename='pag_' + str(count), directory=plt_dir, cleanup=True, quiet=True)
+				
+				gdot.clear()
+				count += 1
+
+		return probs
+
+
 	def compute(self, plt_dir=None, rsmp=False, frac=1, n=None, rplc=True):
 
 		if len(self.sel) == 0:
@@ -820,75 +898,3 @@ class AP:
 					plt.close(fig)
 
 		return rslts, anc
-
-
-	def get_best(self, top=None, gdot=None, plt_dir='./'):
-
-		if len(self.sel) == 0:
-			print('nothing selected')
-			quit()
-
-		infos = []
-		for idx in self.idx:
-			vbls = [self.sel[v] for v in idx]
-			infos.append(self.model.info(vbls, False))
-
-		scores = []
-		norm = np.dtype(dtype=self.dtype).type(-np.inf)
-
-		for key in self.mecs:
-
-			score = 0
-			score += np.sum([infos[s] for s in key])
-
-			# prior: uniform over MAGs (comment) or MECs (uncomment)
-			score -= len(self.mecs[key])
-
-			if not np.isnan(score) and score != 0:
-				scores.append((score, [mag for mag, anc in self.mecs[key]]))
-				norm = np.logaddexp(norm, score)
-
-		scores.sort(reverse=True)
-
-		probs = []
-		for score in scores:
-			probs.append((np.exp(score[0] - norm) * 100, score[1]))
-
-		if top != None:
-			probs = probs[:top]
-
-		if gdot != None:
-			count = 1
-
-			for prob, mec in probs:
-
-				pag = np.zeros([self.q, self.q])
-				for mag in mec:
-					pag += mag != 0
-				pag /= len(mec)
-
-				for i in range(self.q):
-					a = self.sel[i]
-					gdot.node(a, shape='circle', fixedsize='true',  style='filled', color='lightgray')
-					for j in range(0, i):
-						b = self.sel[j]
-						if pag[i,j] == 1 and pag[j,i] == 1:
-							gdot.edge(b,a,arrowhead='empty',arrowtail='empty',dir='both',color='darkgray')
-						elif pag[i,j] == 1 and pag[j,i] == 0:
-							gdot.edge(b,a,arrowhead='empty',arrowtail='none',dir='both',color='darkgray')
-						elif pag[j,i] == 1 and pag[i,j] == 0:
-							gdot.edge(a,b,arrowhead='empty',arrowtail='none',dir='both',color='darkgray')
-						elif pag[i,j] == 1:
-							gdot.edge(b,a,arrowhead='empty',arrowtail='odot',dir='both',color='darkgray')
-						elif pag[j,i] == 1:
-							gdot.edge(a,b,arrowhead='empty',arrowtail='odot',dir='both',color='darkgray')
-						elif pag[i,j] > 0  and pag[j,i] > 0:
-							gdot.edge(b,a,arrowhead='odot',arrowtail='odot',dir='both',color='darkgray')
-
-				gdot.attr(label='\nProbability: ' + str(prob), scale='2')
-				gdot.render(filename='pag_' + str(count), directory=plt_dir, cleanup=True, quiet=True)
-				
-				gdot.clear()
-				count += 1
-
-		return probs
