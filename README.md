@@ -41,6 +41,7 @@ Knowledge is used to require or forbid various types of relationships between us
       * ***A anc B*** requires that all variables in *A* are ancestors of all variables in *B*;
       * ***A !anc B*** forbids any variable in *A* from being an ancestor of any variable in *B*;
       * ***A uncf B*** forbids any varaible in *A* from being connected to any variable in *B* by a bi-directed edge[^8].
+      
 The two mandatory arrays should be followed by an array for each user defined defined group name where each array containing the variables belonging to the corresponding user defined group.
 ### Example
 ```
