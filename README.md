@@ -1,6 +1,6 @@
 # anc-prob: Ancestral Probability (AP)
 
-This repository contains code and an example for the Ancestral Probability (AP) procedure[^1]. The AP procedure performs local causal discovery (3-5 variables) in a Bayesian manner while accounting for the possibility of latent confounding. This is done by first calculating an approximation of the marginal likelihood for all MAG models[^2] with a modified version of the BIC score[^3][^4][^5] and then marginalizing over features of interst, such as if one variables is an ancestor (cause) of another.
+This repository contains code and an example for the Ancestral Probability (AP) procedure[^1]. The AP procedure performs local causal discovery (3-5 variables) in a Bayesian manner while accounting for the possibility of latent confounding. This is done by first calculating an approximation of the marginal likelihood for all MAG models[^2] with a modified version of the BIC score[^3][^4][^5] and then marginalizing over features of interest, such as if one variable is an ancestor (cause) of another.
 
 ## Dependencies
 
@@ -20,7 +20,7 @@ This repository contains code and an example for the Ancestral Probability (AP) 
 
 ## Models
 
-We approximate the marginal likelihood of MAG models[^2] with a modified version of the BIC score[^3][^4][^5]. This score requires a parametric model from a curved exponential family. This repository contains the follow models:
+We approximate the marginal likelihood of MAG models[^2] with a modified version of the BIC score[^3][^4][^5]. This score requires a parametric model from a curved exponential family. This repository contains the following models:
 1. Multivariate Gaussian (continuous):
    * ap.MG(*data*)
       * *data* = pandas.DataFrame
@@ -51,7 +51,7 @@ We approximate the marginal likelihood of MAG models[^2] with a modified version
 
 ## Knowledge
 
-Knowledge is used to require or forbid various types of relationships between user defined groups of variables. Knowledge can be added to the analysis by JSON file. The JSON file should be constructed with to mandatory arrays:
+Knowledge is used to require or forbid various types of relationships between user defined groups of variables. Knowledge can be added to the analysis by JSON file. The JSON file should be constructed with two mandatory arrays:
    * **"sets"** is an array containing users defined group names for users defined groups of variables:
       * groups should not be named *"sets"* or *"rels"*;
       * groups can contain overlapping variables;
@@ -63,7 +63,7 @@ Knowledge is used to require or forbid various types of relationships between us
       * ***A !anc B*** forbids any variable in *A* from being an ancestor of any variable in *B*;
       * ***A uncf B*** forbids any varaible in *A* from being connected to any variable in *B* by a bi-directed edge[^8].
 
-The two mandatory arrays should be followed by an array for each user defined defined group name where each array containing the variables belonging to the corresponding user defined group.
+The two mandatory arrays should be followed by an array for each user defined group name where each array containing the variables belonging to the corresponding user defined group.
 
 ### Example
 
@@ -80,13 +80,13 @@ The two mandatory arrays should be followed by an array for each user defined de
 ]
 ```
 
-In the example above, we have defined group names **"disc"** and **"cont"** which are intended to contain the discrete and continuous variables, respectively. After defining these group names, we specify two relationships that we wish to enforce in the analysis:
-   * ***cont !anc disc*** forbids models where any variable in *cont* is an ancestor of a variable in *disc*;
-   * ***cont uncf disc*** forbids models with dependence between one or more variables in *cont* and one or more variables in *disc* that can only be explained by latent confounding.
+In the example above, we define two group names, *"disc"* and *"cont"*, which are intended to contain the discrete and continuous variables, respectively. After defining these group names, we specify two relationships that we wish to enforce in the analysis:
+   * ***cont !anc disc*** forbids models where any variable in *"cont"* is an ancestor of a variable in *"disc"*;
+   * ***cont uncf disc*** forbids models with dependence between one or more variables in *"cont"* and one or more variables in *"disc"* that can only be explained by latent confounding.
 
 ## Usage
 
-We start by choosing a dataset to analyze. Here we investigate a dataset concerning housing values in suburbs of Boston which we pull from a repository of datasets suitable for causal discovery analysis[^9][^10].
+We start by choosing a dataset to analyze. Here we investigate a dataset concerning housing values in suburbs of Boston which we load from a repository of datasets suitable for causal discovery analysis[^9][^10].
 
 ```python
 import os
@@ -119,7 +119,7 @@ print("instances:", len(df.index))
 instances: 506
 ```
 
-Next, we choose a parameteric model to fit to the data. Our dataset contains 13 continuous variables and one binary variable, so we choose the Lee and Hastie model because it can be applied to mixed datasets.
+Next, we choose a parametric model to fit to the data. Our dataset contains 13 continuous variables and one binary variable, so we choose the Lee and Hastie model because it can be applied to mixed datasets.
 
 ```python
 # Create the model and AP object
@@ -127,14 +127,14 @@ model = ap.LH(df)
 anc_prob = ap.AP(model)
 ```
 
-Next, we choose a subset of the variables to analyze. In this example we choose the follow variables:
+Next, we choose a subset of variables to analyze. In this example we choose the following variables:
    * **AGE** is the proportion of owner-occupied units built prior to 1940;
    * **CHAS** is a indicator variable for the Charles River (1 if tract bounds river and 0 otherwise);
    * **CRIM** is the per capita crime rate by town;
    * **MEDV** is the median value of owner-occupied homes in $1,000's;
    * **TAX** is the full-value property-tax rate per $10,000.
 
-These variables where selected somewhat at random for this demostration. We encourage uses to try selecting a different subset! Please limit yourself to subsets of 5 variables or less.
+These variables were selected somewhat at random for this demonstration. We encourage uses to try selecting a different subset! If you do, please limit yourself to subsets of 5 variables or less.
 
 ```python
 # Select a subset of the variable to analyze
@@ -152,7 +152,7 @@ num mecs: 24259
 num mags: 328924
 ```
 
-Above, we see that we are currently considering 328,924 causal models. We can narrow this set down to a more relevant set by incorporating knowledge.
+Above, we see that we are currently considering 328,924 MAG models. We can narrow this down to a more relevant set of models by incorporating knowledge.
 
 ```python
 # Load knowledge
@@ -169,7 +169,7 @@ num mecs: 9896
 num mags: 39872
 ```
 
-Now we are ready to analyze our data. We start by visualizing the most probable Markov equivalence classes (MECs) of the MAG models, which are illustrated using PAGs[^2].
+Now we are ready to analyze our data. We start by visualizing the most probable Markov equivalence classes (MECs) of MAG models, which are illustrated using PAGs[^2].
 
 ```python
 # Get the top 6 PAGs
@@ -187,7 +187,7 @@ anc_prob.get_best(top=6, gdot=gdot, plt_dir=plt_dir)
 |:-:|:-:|:-:|
 |![Fourth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_4.png "pag_4.png")|![Fifth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_5.png "pag_5.png")|![Sixth PAG](https://github.com/bja43/anc-prob/blob/main/figs_ex/best_pags/pag_6.png "pag_6.png")|
 
-Given the most probable MECs/PAGs, it might be interesting to investigate the possible causes of **CRIM** (per capita crime rate by town). In particular, what are the probabilities that the follow variables causes **CRIM**:
+Given the most probable MECs/PAGs, it might be interesting to investigate the possible causes of **CRIM** (per capita crime rate by town). In particular, what are the probabilities that the following variables cause **CRIM**:
    * **AGE** (proportion of owner-occupied units built prior to 1940);
    * **MEDV** (median value of owner-occupied homes in $1,000's);
    * **TAX** (full-value property-tax rate per $10,000).
@@ -203,7 +203,7 @@ anc_prob.compute(plt_dir=plt_dir)
 |:-:|:-:|:-:|
 |![AGE x CRIM](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/AGE_CRIM.png "AGE_CRIM.png")|![CRIM x MEDV](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/CRIM_MEDV.png "CRIM_MEDV.png")|![CRIM x TAX](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/CRIM_TAX.png "CRIM_TAX.png")|
 
-We can gain confidence in the robustivity of our results using resampling techniques. In this case, we bootstrap the datasets 100 times.
+We can gain confidence in the robustivity of our results using resampling techniques. In this case, we bootstrap the dataset 100 times.
 
 ```python
 # Resample the procedure
