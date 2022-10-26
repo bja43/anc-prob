@@ -1,5 +1,5 @@
 # anc-prob: Ancestral Probability (AP)
-This repository contains code and an example for the Ancestral Probability (AP) procedure[^1]. The AP procedure performed local causal discovery (3-5 variables) in a Bayesian manner while allowing for latent confounding.
+This repository contains code and an example for the Ancestral Probability (AP) procedure[^1]. The AP procedure performs local causal discovery (3-5 variables) in a Bayesian manner while accounting for the possibility of latent confounding. This is done by calculating an approximation of the marginal likelihood for all MAG models[^2] with a modified version of the BIC score[^3][^4][^5] and marginalizing over features of interst, such as if one variables is an ancestor (cause) of another.
 
 ## Dependencies
 
@@ -17,7 +17,7 @@ This repository contains code and an example for the Ancestral Probability (AP) 
 
 ## Models
 
-We approximate the marginal likelihood of the models that allow for latent confounding[^2] using a modified version of the BIC[^3][^4][^5] score. This score requires a model from a curved exponential family. This repository contains the follow models:
+We approximate the marginal likelihood of MAG models[^2] with a modified version of the BIC score[^3][^4][^5]. This score requires a parametric model from a curved exponential family. This repository contains the follow models:
 1. Multivariate Gaussian (continuous):
    * ap.MG(*data*)
       * *data* = pandas.DataFrame
@@ -30,8 +30,9 @@ We approximate the marginal likelihood of the models that allow for latent confo
 
 ## Knowledge
 
-Knowledge is used to require or forbid various types of relationships between user defined groups of variables. Knowledge can be added to the analysis by JSON file. The JSON file should be constructed with to manidtory arrays:
+Knowledge is used to require or forbid various types of relationships between user defined groups of variables. Knowledge can be added to the analysis by JSON file. The JSON file should be constructed with to mandatory arrays:
    * **"sets"** is an array containing users defined group names for users defined groups of variables:
+      * groups should not be named *"sets"* or *"rels"*;
       * groups can contain overlapping variables;
       * groups can be singletons.
    * **"rels"** is an array containing (required/forbidden) relationships between pairs of the user defined groups, e.g. for groups *A* and *B* (*A = B* is allowed):
@@ -40,7 +41,7 @@ Knowledge is used to require or forbid various types of relationships between us
       * ***A anc B*** requires that all variables in *A* are ancestors of all variables in *B*;
       * ***A !anc B*** forbids any variable in *A* from being an ancestor of any variable in *B*;
       * ***A uncf B*** forbids any varaible in *A* from being connected to any variable in *B* by a bi-directed edge[^8].
-
+The two mandatory arrays should be followed by an array for each user defined defined group name where each array containing the variables belonging to the corresponding user defined group.
 ### Example
 ```
 [
@@ -68,21 +69,14 @@ In the example above, we have defined group names **"disc"** and **"cont"** whic
    * set_selected(*selected*)
       * *selected* = list (subset of variables to be analyzed)
    * get_counts()
-   * get_best(*top*, *gdot*, *plt_dir*)
+   * get_best(*top=None*, *gdot=None*, *plt_dir=None*)
       * (optional) *top* = int (number of graphs to return)
       * (optional) *gdot* = graphviz.Graph (graphviz Graph object, if None no figures are produced)
       * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
-   * compute(*plt_dir*, *rsmp*, *frac*, *n*, *rplc*)
+   * compute(*plt_dir=None*)
       * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
-      * (optional) *rsmp* = bool (resample the data)
-      * (optional) *frac* = float (fraction of the dataset to resample, ignored if n != None)
-      * (optional) *n* = int (number of instances to resample)
-      * (optional) *rplc* = bool (resample with replacement)
-   * resample(*reps*, *plt_dir*, *frac*, *n*, *rplc*)
+   * resample(*reps*, *plt_dir=None*)
       * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
-      * (optional) *frac* = float (fraction of the dataset to resample, ignored if n != None)
-      * (optional) *n* = int (number of instances to resample)
-      * (optional) *rplc* = bool (resample with replacement)
 
 ## Usage
 
@@ -203,7 +197,7 @@ anc_prob.compute(plt_dir=plt_dir)
 |:-:|:-:|:-:|
 |![AGE x CRIM](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/AGE_CRIM.png "AGE_CRIM.png")|![CRIM x MEDV](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/CRIM_MEDV.png "CRIM_MEDV.png")|![CRIM x TAX](https://github.com/bja43/anc-prob/blob/main/figs_ex/plots_single/CRIM_TAX.png "CRIM_TAX.png")|
 
-We can gain confidence in the robustivity of our results using resampling techniques.
+We can gain confidence in the robustivity of our results using resampling techniques. In this case, we bootstrap the datasets 100 times.
 
 ```python
 # Resample the procedure

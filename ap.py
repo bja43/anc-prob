@@ -673,7 +673,7 @@ class AP:
 				del self.mecs[key]
 
 
-	def get_best(self, top=None, gdot=None, plt_dir='./'):
+	def get_best(self, top=None, gdot=None, plt_dir=None):
 
 		if len(self.sel) == 0:
 			print('nothing selected')
@@ -708,7 +708,7 @@ class AP:
 		if top != None:
 			probs = probs[:top]
 
-		if gdot != None:
+		if gdot != None and plt_dir != None:
 			count = 1
 
 			for prob, mec in probs:
