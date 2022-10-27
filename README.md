@@ -47,6 +47,7 @@ We approximate the marginal likelihood of MAG models[^2] with a modified version
    * compute(*plt_dir=None*)
       * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
    * resample(*reps*, *plt_dir=None*)
+      * *reps* = int (number of resampling repetitions)
       * (optional) *plt_dir* = path/directory (figure output directory, if None no figures are produced)
 
 ## Knowledge
