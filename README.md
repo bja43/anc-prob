@@ -135,7 +135,7 @@ Next, we choose a subset of variables to analyze. In this example we choose the 
    * **MEDV** is the median value of owner-occupied homes in $1,000's;
    * **TAX** is the full-value property-tax rate per $10,000.
 
-These variables were selected somewhat at random for this demonstration. We encourage uses to try selecting a different subset! If you do, please limit yourself to subsets of 5 variables or less.
+These variables were selected somewhat at random for this demonstration. We encourage users to try selecting a different subset! If you do, please limit yourself to subsets of 5 variables or less.
 
 ```python
 # Select a subset of the variable to analyze
